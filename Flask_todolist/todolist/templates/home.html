@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}My Tasks{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <!-- Thông báo -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} text-center" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <h2 class="text-center mb-4">My Tasks</h2>
+
+  <!-- Bảng task -->
+  <table class="table table-hover text-center align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>Work</th>
+        <th>Start Date</th>
+        <th>Finish Date</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for note in notes %}
+      <tr id="note-{{ note.id }}">
+        <td>{{ note.work_name }}</td>
+        <td>{{ note.start_date.strftime('%d/%m/%Y') if note.start_date else '-' }}</td>
+        <td>{{ note.finish_date.strftime('%d/%m/%Y') if note.finish_date else '-' }}</td>
+        <td>
+          <select class="form-select form-select-sm w-auto d-inline"
+                  onchange="updateStatus({{ note.id }}, this.value)">
+            <option value="Processing" {% if not note.is_done %}selected{% endif %}>Processing</option>
+            <option value="Finish" {% if note.is_done %}selected{% endif %}>Finish</option>
+          </select>
+        </td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deleteNote({{ note.id }})">Delete</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Form thêm task ở dưới -->
+  <div class="mt-5 text-center">
+    <h5 class="mb-3">Add New Task</h5>
+    <form method="POST" class="d-flex justify-content-center align-items-center gap-2"
+          action="{{ url_for('view.home') }}">
+      <input type="text" name="work_name" class="form-control w-25" placeholder="Work name..." required>
+      <input type="date" name="start_date" class="form-control w-25">
+      <input type="date" name="finish_date" class="form-control w-25">
+      <button type="submit" class="btn btn-primary">Add Task</button>
+    </form>
+  </div>
+</div>
+
+<script>
+<script>
+function updateStatus(noteId, newStatus) {
+  fetch("/update-status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ noteId: noteId, status: newStatus }),
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.code !== 200) {
+      alert(data.message);
+    }
+  });
+}
+
+function deleteNote(noteId) {
+  fetch("/delete-note", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ noteId: noteId }),
+  }).then(res => res.json())
+  .then(data => {
+    if (data.code === 200) {
+      document.getElementById("note-" + noteId).remove();
+    } else {
+      alert(data.message);
+    }
+  });
+}
+</script>
+{% endblock %}
