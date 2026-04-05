@@ -19,10 +19,10 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(150))
     user_name = db.Column(db.String(150))
 
-    # Quan hệ: 1 User có nhiều Note
+
     notes = db.relationship("Note", backref="user", lazy=True)
 
-    # ✅ Đặt __init__ ĐÚNG CHỖ
+
     def __init__(self, email, password, user_name):
         self.email = email
         self.password = password
